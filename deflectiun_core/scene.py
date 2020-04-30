@@ -4,14 +4,25 @@ import math
 from .assests import *
 from .physics import *
 
-class Scenario:
+class Scene:
 
-    def __init__(self, size, spacecraft, planets, sc_start_pos=None):
+    def __init__(self, 
+                 size, 
+                 spacecraft, 
+                 planets, 
+                 sc_start_pos=None, 
+                 win_region = tuple, # ([x1,x2], [y1,y2])
+                 win_velocity = 0.0):
 
         self.size = size
         self.sc = spacecraft
         self.planets = planets
         self.sc_start_pos = sc_start_pos
+        
+        self.win_region = win_region
+        self.win_min_velocity = win_velocity
+        self._attempts = 0
+        self.won = False
 
         if not self.sc_start_pos:
             self.sc_start_pos = self._make_sc_start_pos()
@@ -38,38 +49,7 @@ class Scenario:
         for planet in self.planets:
             planet.orbit.progress = self.initial_orbit_pos[planet]
 
-    def update_sc_pos(self, impulse_time, closest_only=True):
-
-        planet_f = 0.0
-
-        if closest_only:
-            closes_planet = find_closest_planet(self.sc, self.planets)
-
-            if closes_planet:
-                planet_f = self.sc.calc_gravitational_force(closes_planet)
-        else:
-            for planet in self.planets:
-                planet_f += self.sc.calc_gravitational_force(planet)
-
-        self.sc.set_net_momentum(impulse_time, planet_f)
-        self.sc.move(impulse_time)
-
-        return self.sc.x, self.sc.y
-
     def update_all_pos(self, impulse_time):
 
         [planet.move(impulse_time) for planet in self.planets]
-        self.update_sc_pos(impulse_time)
-
-def find_closest_planet(sc, planets):
-
-    current_distance = sc.calc_distance(planets[0])
-    index_of_closest = 0
-    current_index = 0
-    for num in range(len(planets)):
-        if sc.calc_distance(planets[current_index]) < current_distance:
-            index_of_closest = current_index
-            current_distance = sc.calc_distance(planets[current_index])
-        current_index += 1
-
-    return planets[index_of_closest]
+        self.sc.update_pos(impulse_time)

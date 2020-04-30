@@ -1,138 +1,29 @@
-import pygame
 import os, sys
 import math
 import numpy as np
 import time
 import ctypes
 
-modpath = os.path.abspath(os.path.split(sys.argv[0])[0])
-sys.path.append(modpath)
-
-from assests import *
-from scene import *
-from physics import *
-
-class GameScene(Scenario):
-    
-    def __init__(self, 
-                 resolution,
-                 sc,
-                 planets,
-                 sc_start_pos = None, 
-                 win_region = tuple, # ([x1,x2], [y1,y2])
-                 win_velocity = 0.0,
-                 win_region_color = (0.0, 255, 174),
-                 background = None # Image path / color tuple
-                ):
-        
-        super().__init__(resolution, sc, planets, sc_start_pos)
-        self.background = background
-        self.win_region = win_region
-        self.win_min_velocity = win_velocity
-        self.win_region_color = win_region_color
-        self._attempts = 0
-        self.won = False
-        
+from .assests import *
+from .scene import *
+from .physics import *
+     
 class Game:
     
-    def __init__(self, fullscreen = False, font = 'Helvetica Neue', font_size = 30, fps = 60.0, scenes = []):
+    def __init__(self, fps = 60.0, scenes = list):
         
-        pygame.init()
-        pygame.font.init()
-        
-        self.clock = pygame.time.Clock()
-        self.fullscreen = fullscreen
         self.fps = fps
         self.last_dt = 1 / fps
         self.current_dt = 1 / fps
-        self.font = pygame.font.SysFont(font, font_size)
         self.scenes = scenes
-        self.screen = None # current screen
-        self.extra_time = 0.0
         self.current_scene = self.scenes[0]
-        self._bg_loaded = False
-        self.__rpk = 45 / 4e16 # radius per kilogram of planet
         self._done = False        
         
+        # Reset each scene
         for scene in self.scenes:
             scene._attempts = 0
             scene.won = False
-    
-    def wait(self, time_in_seconds):
-        
-        time.sleep(time_in_seconds)
-        self.extra_time = time_in_seconds    
-    
-    def loadImage(self, path, size):
-        
-        img = pygame.image.load(path)
-        img_scaled = pygame.transform.scale(img, size)
-        rectangle = img_scaled.get_rect()
-        rectangle = rectangle.move((0,0))
-        
-        return img_scaled, rectangle
-    
-    def renderBackground(self, scene):
-        
-        ''' Render background of scene on current game screen '''
-              
-        if scene.background:
-            if (isinstance(scene.background, list) or isinstance(scene.background, tuple)) and len(scene.background) == 3:
-                # RGB Value given
-                self.screen.fill(scene.background)
-            else:
-                # Image path given
-                if not self._bg_loaded:
-                    self._bg_img, self._bg_rect = self.loadImage(scene.background, scene.size)                  
-                
-                self.screen.blit(self._bg_img, self._bg_rect)   
-                  
-        else:
-            # Default: lack screen
-            self.screen.fill((0,0,0))
-    
-    def renderPlanets(self, scene):
-        
-        rpk = self.__rpk
-        
-        for planet in scene.planets:
-            
-            pygame.draw.ellipse(self.screen, planet.color, pygame.Rect(planet.x-rpk*planet.mass, planet.y-rpk*planet.mass, rpk*planet.mass * 2, rpk*planet.mass * 2))
-            # Orbit
-            pygame.draw.ellipse(self.screen, (255,255,255), pygame.Rect(planet.orbit.center_x-planet.orbit.a, planet.orbit.center_y-planet.orbit.b, planet.orbit.a*2, planet.orbit.b*2), 1)
-    
-    def renderWinRegion(self, scene):
-        
-        pygame.draw.line(self.screen, scene.win_region_color, (scene.win_region[0][0], scene.win_region[0][1]), (scene.win_region[1][0], scene.win_region[1][1]), 25)
-    
-    def createScreen(self, scene = None):
-        
-        ''' Start screen window '''
-        
-        if not scene:
-            scene = self.current_scene
-        
-        if self.fullscreen:
-            
-            infoObject = pygame.display.Info()
-            screen_x, screen_y = infoObject.current_w, infoObject.current_h
-            
-            if scene.size[0] == screen_x or scene.size[1] == screen_y:
-                # Only windows!            
-                ctypes.windll.user32.SetProcessDPIAware()
-            
-            self.screen = pygame.display.set_mode((scene.size[0], scene.size[1]), pygame.FULLSCREEN)
-            
-        else:
-            self.screen = pygame.display.set_mode((scene.size[0], scene.size[1]))
-    
-    def renderSc(self, scene):
-        
-        sc_rot = self.current_scene.sc.sprite.sprite
-        sc_rect = self.current_scene.sc.sprite.rect
-        
-        self.screen.blit(sc_rot, sc_rect)
-    
+               
     def renderScene(self, scene):
         
         '''
@@ -262,17 +153,7 @@ class Game:
         pygame.display.update()
         
         self.wait(sleep_time)
-    
-    def playAudio(self, path):
-        
-        # pygame.mixer.music.load(path)
-        # pygame.mixer.music.play(0)   
-        return None
-
-    def stopAudio(self):
-        
-        pygame.mixer.music.stop()  
-    
+       
     def nextScene(self):
         
         current_i = self.scenes.index(self.current_scene)
@@ -408,6 +289,4 @@ class Game:
             self.gameFail()
     
         pygame.quit()
-        
-          
         
