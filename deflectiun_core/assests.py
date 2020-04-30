@@ -50,6 +50,9 @@ class Asset:
 
         return Force(x, y, mag)
     
+    def intersects(self, other_asset):
+        return self.poly.intersects(other_asset.poly)
+    
     @property
     def p(self):
         return self._p
@@ -76,14 +79,11 @@ class Planet(Asset):
     def move(self, dt=1.0):
 
         self.x, self.y = self.orbit.next_pos(dt)
-    
-    def sc_in_planet(self, sc):
-        
-        center = self.x, self.y
-        
+        self.poly = Point((self.x, self.y)).buffer(self.radius)
+             
 class Spacecraft(Asset):
 
-    def __init__(self, name, mass=0.0, gas_level=0.0, thrust_force=0.0):
+    def __init__(self, name, mass=0.0, gas_level=0.0, thrust_force=0.0, width=10, length=10):
 
         super().__init__(name, 0.0, 0.0, mass)
         self.gas_level = gas_level
@@ -91,7 +91,30 @@ class Spacecraft(Asset):
         self.thrust = False
         self.thrust_direction = '-y'  # +/-x,-y
         self.thrust_mag = thrust_force
+        self.width = width
+        self.length = length
+        self.draw_poly()
 
+    def draw_poly(self):
+
+        theta = self.vel.theta
+        
+        # Initiate rectangle corners around origin
+        rect = [
+            (-self.width/2, -self.length/2),
+            (+self.width/2, -self.length/2),
+            (+self.width/2, +self.length/2),
+            (-self.width/2, +self.length/2),
+        ]
+        
+        # Rotate
+        rotated_rect =  [rotate(vec, theta) for vec in rect]
+        
+        # Translate
+        final_rect = [(p[0]+self.x, p[1]+self.y) for p in rotated_rect]
+        
+        self.poly = Polygon(final_rect)        
+    
     def body_transform(self, vector):
         ''' Body pointing towards self.vel '''
 
@@ -116,13 +139,13 @@ class Spacecraft(Asset):
                 vector = vel_vec
             elif self.thrust_direction == '+y':
                 # vec = [0,1]
-                vector = np.matmul(get_2d_rot_matrix(np.pi), vel_vec)
+                vector = np.matmul(get_rot_matrix(np.pi), vel_vec)
             elif self.thrust_direction == '-x':
                 # vec = [1,0]
-                vector = np.matmul(get_2d_rot_matrix(np.pi/2), vel_vec)
+                vector = np.matmul(get_rot_matrix(np.pi/2), vel_vec)
             elif self.thrust_direction == '+x':
                 # vec = [-1,0]
-                vector = np.matmul(get_2d_rot_matrix(np.pi * 1.5), vel_vec)
+                vector = np.matmul(get_rot_matrix(np.pi * 1.5), vel_vec)
 
             force = Force(vector[0], vector[1], self.thrust_mag)
             # print(math.degrees(angle_between(self.vel.vec, [force.x,force.y])))

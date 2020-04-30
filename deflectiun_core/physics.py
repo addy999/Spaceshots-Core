@@ -12,7 +12,7 @@ class Velocity:
         self.x = x_vel
         self.y = y_vel
         self.vec = [self.x, self.y]
-        self.rot_matrix = get_2d_rot_matrix(self.get_theta())
+        self.rot_matrix = get_rot_matrix(self.get_theta())
         self.mag = (self.x ** 2 + self.y ** 2) ** 0.5
         self.theta = self.get_theta()
 
@@ -108,12 +108,16 @@ def unit_vector(vector):
     else:
         return np.array([0.0, 0.0])
 
-def get_2d_rot_matrix(theta):
+def get_rot_matrix(theta):
 
     return [
         [math.cos(theta), -math.sin(theta)],
         [math.sin(theta), math.cos(theta)]
     ]
+
+def rotate(vec, theta):
+    
+    return np.matmul(get_rot_matrix(theta), vec)
 
 def angle_between(v1, v2):
     """ Returns the angle in degrees between vectors 'v1' and 'v2'::

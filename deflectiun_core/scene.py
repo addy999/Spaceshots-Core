@@ -26,6 +26,8 @@ class Scene:
 
         if not self.sc_start_pos:
             self.sc_start_pos = self._make_sc_start_pos()
+        else:
+            self.sc.x, self.sc.y = sc_start_pos
 
         self.initial_orbit_pos = {}
         for planet in planets:
