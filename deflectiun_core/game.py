@@ -27,13 +27,13 @@ class Game:
         # Reset each scene
         self.reset()
     
-    def control_sc(self, command=int, pressed=True):
+    def control_sc(self, command=int):
         
         ''' 1: up, 2:left, 3: down, 4: right '''
             
-        if command in [1,2,3,4]:
+        if command in [0,1,2,3,4]:
             
-            if pressed:
+            if command != 0:
                 self.current_scene.sc.thrust = True
                 if command == 1:
                         self.current_scene.sc.thrust_direction = '+y'
@@ -44,11 +44,12 @@ class Game:
                 else:
                         self.current_scene.sc.thrust_direction = '+x'
                     
-            else: # released
+            else: # release thrust
                 self.current_scene.sc.thrust = False                
     
-    def check_scene_win_fail(self, scene):
+    def check_status(self):
         
+        scene = self.current_scene
         sc = self.current_scene.sc
         screen_x = self.current_scene.size[0]
         screen_y = self.current_scene.size[0]
@@ -88,25 +89,25 @@ class Game:
         
         return won, failed
           
-    def next_scene(self):
+    def set_next_scene(self):
         
-        current_i = self.scenes.index(self.current_scene)
-        
-        if current_i < len(self.scenes) - 1:
-            self.current_scene  = self.scenes[current_i+1]
-            return self.scenes[current_i+1]
-        else:
-            self.done = True
-            return self.current_scene
+        if self.current_scene.won:
             
-    def win_scene(self):
+            current_i = self.scenes.index(self.current_scene)
+            
+            if current_i < len(self.scenes) - 1:
+                self.current_scene = self.scenes[current_i+1]
+            else:
+                self.done = True
+            
+    def _scene_won(self):
         
-        self.current_scene = self.next_scene() #iterate next scene
-        self.current_scene.reset_pos()
-        self.current_scene.attempts += 1
-        self.current_scene.won = True    
+        self.current_scene.won = True  
+        self.current_scene.attempts += 1  
+        self.set_next_scene()
+        self.current_scene.reset_pos()              
     
-    def fail_scene(self):
+    def _scene_failed(self):
         
         self.current_scene.reset_pos()
         self.current_scene.attempts += 1
@@ -118,12 +119,12 @@ class Game:
         
         for scene in self.scenes:
             if scene.won:
-                total += per_scene_score 
+                total += self.per_scene_score 
                 if scene.attempts > 1:
-                    total -= (scene.attempts-1) * per_attempt_deductions
+                    total -= (scene.attempts-1) * self.per_attempt_deductions
                 if scene.attempts >= 1:
                     gas_left = scene.sc.gas_level / scene.sc._initial_gas_level
-                    gas_bonus += gas_left * per_gas_bonus_score
+                    gas_bonus += gas_left * self.per_gas_bonus_score
                     total += gas_bonus            
         
         if total < 0:
@@ -136,45 +137,15 @@ class Game:
         [s.reset() for s in self.scenes]
         self.current_scene = self.scenes[0]
         self.done = False  
-   
-    def start_game(self, scene_to_start_at = self.scenes[0]):
-        
-        self.done = False        
-        while not self.done:
-            
-            # check game exit conditions
-            for event in pygame.event.get():
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                        self.done = True
-                    
-                # Modify spacecraft thrusters 
-                self.control_sc(event)
-                        
-            # Iterate next planetary + sc positions
-            self.current_scene.updateAllPos(self.current_dt)
-                
-            # Check scene exit conditions
-            won, failed = self.check_scene_win_fail(self.current_scene)
-            if won: self.sceneWin()
-            elif failed: self.fail_scene()
-    
-            if not self.done:
-                # Draw modified scene            
-                self.renderScene(self.current_scene)
-                pygame.display.update()
-                self.last_dt = self.current_dt
-                self.current_dt = self.clock.tick(self.fps) / 1000 # to seconds
-                if self.extra_time > 0.0 :
-                    # Remove lag so game movements don't skip ahead
-                    self.current_dt -= self.extra_time
-                    self.extra_time = 0.0
-        
-                # print(self.last_dt, self.current_dt)
 
-        if won:
-            self.gameWon()
-        else:
-            self.gameFail()
-    
-        pygame.quit()
+    def send_command(self, command=int):
         
+        self.control_sc(command)
+        self.current_scene.update_all_pos(self.current_dt)
+        level_won, level_failed = self.check_status()
+        if level_won:
+            self._scene_won()
+        elif level_failed:
+            self._scene_failed()
+        
+        return level_won, level_failed        

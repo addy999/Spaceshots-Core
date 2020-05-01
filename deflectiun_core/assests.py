@@ -93,6 +93,7 @@ class Spacecraft(Asset):
         self.thrust_mag = thrust_force
         self.width = width
         self.length = length
+        self.gas_reduction_level = 1/1000
         self.draw_poly()
 
     def draw_poly(self):
@@ -128,7 +129,7 @@ class Spacecraft(Asset):
 
         if self.thrust:
 
-            self.gas_level -= self.thrust_mag / 1000
+            self.gas_level -= self.thrust_mag * self.gas_reduction_level
 
             vel_vec = self.vel.vec
             if np.linalg.norm(self.vel.vec) == 0.0:

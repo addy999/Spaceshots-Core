@@ -12,7 +12,9 @@ class Scene:
                  planets, 
                  sc_start_pos=None, 
                  win_region = tuple, # ([x1,x2], [y1,y2])
-                 win_velocity = 0.0):
+                 win_velocity = 0.0,
+                 sc_gas_reduction_level = 1/1000
+                 ):
 
         self.size = size
         self.sc = spacecraft
@@ -28,6 +30,8 @@ class Scene:
             self.sc_start_pos = self._make_sc_start_pos()
         else:
             self.sc.x, self.sc.y = sc_start_pos
+            
+        self.sc.gas_reduction_level = sc_gas_reduction_level
 
         self.initial_orbit_pos = {}
         for planet in planets:
@@ -60,4 +64,10 @@ class Scene:
     def update_all_pos(self, impulse_time):
 
         [planet.move(impulse_time) for planet in self.planets]
-        self.sc.update_pos(impulse_time)
+        self.sc.update_pos(impulse_time, self.planets)
+        
+class Config:
+    
+    def __init__(self, sc_gas_reduction_level=1/1000, scene_score=100, scene_attempt_reduction=5, scene_gas_bonus=10):
+        
+        self.sc_gas_reduction_level
