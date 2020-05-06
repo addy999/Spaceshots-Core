@@ -4,6 +4,7 @@ import numpy as np
 import math
 
 from .physics import *
+from .utils import * 
 from shapely.geometry import Point, Polygon
 
 class Asset:
@@ -62,6 +63,9 @@ class Asset:
     def p(self, val):
         self._p = val
         self.vel = Velocity(val.x / self.mass, val.y / self.mass)
+    
+    def __repr__(self):
+        return str(vars(self))
 
 class Planet(Asset):
 
@@ -130,22 +134,20 @@ class Spacecraft(Asset):
 
             self.gas_level -= self.thrust_mag * self.gas_per_thrust
 
-            vel_vec = self.vel.vec
+            # body_vec = self.vel.vec
+            body_vec = rotate(self.theta, [1,0])
             if np.linalg.norm(self.vel.vec) == 0.0:
-                vel_vec = [0, -1]
+                # body_vec = [0, -1]
+                body_vec = [1, 0]
 
             if self.thrust_direction == '-y':
-                # vec = [0,-1]
-                vector = vel_vec
+                vector = rotate(np.pi*1.5, body_vec)
             elif self.thrust_direction == '+y':
-                # vec = [0,1]
-                vector = rotate(np.pi, vel_vec)
+                vector = rotate(np.pi/2, body_vec)
             elif self.thrust_direction == '-x':
-                # vec = [1,0]
-                vector = rotate(np.pi/2, vel_vec)
+                vector = rotate(np.pi, body_vec)
             elif self.thrust_direction == '+x':
-                # vec = [-1,0]
-                vector = rotate(np.pi*1.5, vel_vec)
+                vector = rotate(0.0, body_vec)
 
             force = Force(vector[0], vector[1], self.thrust_mag)
             return Momentum.from_impulse(force, time)
@@ -167,9 +169,9 @@ class Spacecraft(Asset):
 
     def find_closest_planet(self, planets=list):
 
-        # current_distance = self.calc_distance(planets[0])
-        # print("Using", self.min_dist_to_planet)
-        current_distance = self.min_dist_to_planet
+        current_distance = self.calc_distance(planets[0])
+        # current_distance = self.min_dist_to_planet
+        
         index_of_closest = 0
         current_index = 0
         for num in range(len(planets)):
@@ -177,11 +179,10 @@ class Spacecraft(Asset):
                 index_of_closest = current_index
                 current_distance = self.calc_distance(planets[current_index])
             current_index += 1
-        # print("CLOSEST", current_distance)
         
-        if current_distance == self.min_dist_to_planet:
-            # No close planet found
-            return None
+        # if current_distance == self.min_dist_to_planet:
+        #     # No close planet found
+        #     return None
         
         return planets[index_of_closest]
 
@@ -223,14 +224,9 @@ class Spacecraft(Asset):
     def theta(self, vel_theta):
                
         old_val = self._theta
-        
-        # print("assinging", vel_theta, "Prev", old_val)
-        
         if abs(vel_theta-old_val) < math.pi:
             # self._theta = old_val + (val-old_val)/2
             self._theta = vel_theta - math.pi*0.5
-        
-        # print("Assingined", self._theta)
         
     @property
     def p(self):
