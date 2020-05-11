@@ -99,17 +99,19 @@ class LevelBuilder:
                 radius_per_kilogram = (45 / 4e16, 45 / 4e16)
             ),
             orbit = dict(
-                a = (1.0, 1.0),
-                b = (0.5, 1.0),
+                a = (300, 400), # 324
+                b = (200, 300), # 234
                 angular_step = (2*np.pi/200, 2*np.pi/200), # speed
-                center_x = (self.x_size, self.x_size/2), 
-                center_y = (0, self.y_size/2),
+                center_x = (self.x_size/3, 3*self.x_size/4), 
+                center_y = (self.y_size/3, 3*self.y_size/4),
             ),
             sc = dict(
                 mass = (100, 125),
                 gas_level = (500, 600),
                 thrust_force = (3000,3000),
                 gas_per_thrust = (0.5/1000, 1/1000),
+                width=(35,35), 
+                length=(35,35),
             ),
             scene = dict(
                 # (x_range), (y_range)
@@ -141,6 +143,8 @@ class LevelBuilder:
                 gas_level = (350, 450),
                 thrust_force = (3000,4500),
                 gas_per_thrust = (1/1000, 1.5/1000),
+                width=(35,35), 
+                length=(35,35),
             ),
             scene = dict(
                 # (x_range), (y_range)
@@ -155,8 +159,7 @@ class LevelBuilder:
         )
     
     def create(self, option='medium'):
-        
-       
+               
         init_config = dict_to_class(self.__dict__[option.lower()])
         
         planets = []
@@ -169,7 +172,7 @@ class LevelBuilder:
             planet = Planet(name='', mass=uniform(*init_config.planet.mass), orbit = orbit, radius_per_kilogram=uniform(*init_config.planet.radius_per_kilogram))
             planets.append(planet)
         
-        sc = Spacecraft('', uniform(*init_config.sc.mass), uniform(*init_config.sc.gas_level),uniform(*init_config.sc.thrust_force), gas_per_thrust=uniform(*init_config.sc.gas_per_thrust))
+        sc = Spacecraft('', uniform(*init_config.sc.mass), uniform(*init_config.sc.gas_level),uniform(*init_config.sc.thrust_force), gas_per_thrust=uniform(*init_config.sc.gas_per_thrust), width=uniform(*init_config.sc.width), length=uniform(*init_config.sc.length))
         
         win_region1 = (uniform(*init_config.scene.win_region1[0]), uniform(*init_config.scene.win_region1[1]))    
         win_region2 = (uniform(*init_config.scene.win_region2[0]), uniform(*init_config.scene.win_region2[1]))  

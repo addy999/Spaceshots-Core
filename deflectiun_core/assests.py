@@ -92,8 +92,8 @@ class Spacecraft(Asset):
 
         super().__init__(name, 0.0, 0.0, mass)
         self._theta = -math.pi/2
-        self.gas_level = gas_level
-        self._initial_gas_level = gas_level
+        self.gas_level = round_to_nearest(gas_level, 10)
+        self._initial_gas_level = self.gas_level
         self.thrust = False
         self.thrust_direction = '-y'  # +/-x,-y
         self.thrust_mag = thrust_force
@@ -132,7 +132,7 @@ class Spacecraft(Asset):
 
         if self.thrust:
 
-            self.gas_level -= self.thrust_mag * self.gas_per_thrust
+            self.gas_level -= round(self.thrust_mag * self.gas_per_thrust)
 
             # body_vec = self.vel.vec
             body_vec = rotate(self.theta, [1,0])
