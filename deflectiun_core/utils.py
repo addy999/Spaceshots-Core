@@ -17,3 +17,13 @@ def dict_to_class(_dict):
 
 def round_to_nearest(num, nearest):
     return round(num/nearest) * nearest
+
+def closest_dist_to_sc(sc, planets):
+    
+    min_dist = 1e6
+    for planet in planets:
+        dist = sc.calc_distance(planet)
+        if dist<min_dist:
+            min_dist=dist
+    
+    return min_dist

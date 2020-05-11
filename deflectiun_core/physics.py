@@ -3,6 +3,9 @@ import math
 import os
 import sys
 
+from shapely.geometry.point import Point
+import shapely.affinity
+
 G = 6.67408e-11  # m^3/kg*s^2
 
 class Velocity:
@@ -81,7 +84,14 @@ class Orbit:
         self.center_y = center_y
         self.progress = progress
         self.cw = CW
+        
+        self.make_poly(a, b, center_x, center_y)
         self.change_angular_step(angular_step)
+    
+    def make_poly(self, a, b, center_x, center_y):
+        circ = shapely.geometry.Point((center_x, center_y)).buffer(1)
+        ell  = shapely.affinity.scale(circ, int(a), int(b))
+        self.poly = ell
     
     def change_angular_step(self, angular_step=float):
         self.angular_step = angular_step % 2*np.pi
@@ -110,6 +120,23 @@ class Orbit:
     
     def __repr__(self):
         return str(vars(self))
+
+class OrbitCollection:
+    
+    def __init__(self, orbits, min_distance):
+        
+        self.orbits = orbits
+        self.min_distance = min_distance
+    
+    def orbits_valid(self):
+        for o in self.orbits:
+            for j in self.orbits:
+                if o!=j:                    
+                    if o.poly.intersects(j.poly):
+                        return False                    
+                    if o.poly.exterior.distance(j.poly.exterior) < self.min_distance:
+                        return False                
+        return True
 
 def unit_vector(vector):
     """ Returns the unit vector of the vector.  """

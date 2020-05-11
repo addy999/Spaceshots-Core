@@ -1,6 +1,7 @@
 import os
 import sys
 import math
+import time 
 
 from numpy.random import uniform
 from random import randint
@@ -102,8 +103,9 @@ class LevelBuilder:
                 a = (300, 400), # 324
                 b = (200, 300), # 234
                 angular_step = (2*np.pi/200, 2*np.pi/200), # speed
-                center_x = (self.x_size/3, 3*self.x_size/4), 
-                center_y = (self.y_size/3, 3*self.y_size/4),
+                center_x = (0, self.x_size), 
+                center_y = (0, self.y_size),
+                min_distance = (self.x_size/2, self.y_size/2),
             ),
             sc = dict(
                 mass = (100, 125),
@@ -130,11 +132,12 @@ class LevelBuilder:
             ),
             orbit = dict(
                 progress = (-np.pi/2, np.pi/2),
-                a = (100, 400),
-                b = (200, 600),
+                a = (100, 500),
+                b = (300, 600),
                 angular_step = (1.5*np.pi/200, 3*np.pi/200), # speed
-                center_x = (self.x_size/4, 3*self.x_size/4), 
-                center_y = (self.y_size/4, 3*self.y_size/4),
+                center_x = (0, self.x_size), 
+                center_y = (0, self.y_size),
+                min_distance = (self.x_size/2, self.y_size/2),
             ),
             sc = dict(
                 mass = (100, 125),
@@ -155,25 +158,36 @@ class LevelBuilder:
         )
     
     def create(self, option='medium'):
-               
+        start=time.time()       
         init_config = dict_to_class(self.__dict__[option.lower()])
         
-        planets = []
+        # Orbits         
+        orbits = []
         n = randint(*init_config.planet.n)
-        for i in range(n):
-            
-            orbit = Orbit(uniform(*init_config.orbit.a), uniform(*init_config.orbit.b), uniform(*init_config.orbit.center_x), uniform(*init_config.orbit.center_y), angular_step=uniform(*init_config.orbit.angular_step), CW=randint(0,1))
-            # print("ORBIT", vars(orbit))
-            
-            planet = Planet(name='', mass=uniform(*init_config.planet.mass), orbit = orbit, radius_per_kilogram=uniform(*init_config.planet.radius_per_kilogram))
-            planets.append(planet)
+        valid_orbits = False
+        while not valid_orbits:
+            orbits = [Orbit(uniform(*init_config.orbit.a), uniform(*init_config.orbit.b), uniform(*init_config.orbit.center_x), uniform(*init_config.orbit.center_y), angular_step=uniform(*init_config.orbit.angular_step), CW=randint(0,1)) for i in range(n)]
+            valid_orbits = OrbitCollection(orbits, uniform(*init_config.orbit.min_distance)).orbits_valid()
         
+         # SC
         sc = Spacecraft('', uniform(*init_config.sc.mass), uniform(*init_config.sc.gas_level),uniform(*init_config.sc.thrust_force), gas_per_thrust=uniform(*init_config.sc.gas_per_thrust), width=uniform(*init_config.sc.width), length=uniform(*init_config.sc.length))
         
+        # Planets    
+        planets = [Planet(name='', mass=uniform(*init_config.planet.mass), orbit = orbit, radius_per_kilogram=uniform(*init_config.planet.radius_per_kilogram)) for orbit in orbits]
+        print(closest_dist_to_sc(sc, planets),  max(self.x_size, self.y_size)/2)
+        d=0
+        while closest_dist_to_sc(sc, planets) <= max(self.x_size, self.y_size)/2:
+            [p.move() for p in planets]
+            print(closest_dist_to_sc(sc, planets),  max(self.x_size, self.y_size)/2)
+            d+=1
+        print(d, "attempts")
+            
+
+                
+        # Scene
         win_region1 = (uniform(*init_config.scene.win_region1[0]), uniform(*init_config.scene.win_region1[1]))    
-        win_region2 = (uniform(*init_config.scene.win_region2[0]), uniform(*init_config.scene.win_region2[1]))  
-                       
+        win_region2 = (uniform(*init_config.scene.win_region2[0]), uniform(*init_config.scene.win_region2[1]))    
         scene = Scene((self.x_size,self.y_size), sc, planets, sc_start_pos=None, win_region=(win_region1, win_region2), win_velocity=uniform(*init_config.scene.win_velocity), completion_score=randint(*init_config.scene.completion_score),attempt_score_reduction=randint(*init_config.scene.attempt_score_reduction ), gas_bonus_score=randint(*init_config.scene.gas_bonus_score))
         
+        print("TIME TAKEN", time.time()-start)
         return scene
-
