@@ -158,7 +158,7 @@ class LevelBuilder:
         )
     
     def create(self, option='medium'):
-        start=time.time()       
+        # start=time.time()       
         init_config = dict_to_class(self.__dict__[option.lower()])
         
         # Orbits         
@@ -187,5 +187,5 @@ class LevelBuilder:
         win_region2 = (uniform(*init_config.scene.win_region2[0]), uniform(*init_config.scene.win_region2[1]))    
         scene = Scene((self.x_size,self.y_size), sc, planets, sc_start_pos=None, win_region=(win_region1, win_region2), win_velocity=uniform(*init_config.scene.win_velocity), completion_score=randint(*init_config.scene.completion_score),attempt_score_reduction=randint(*init_config.scene.attempt_score_reduction ), gas_bonus_score=randint(*init_config.scene.gas_bonus_score))
         
-        print("TIME TAKEN", time.time()-start)
+        # print("TIME TAKEN", time.time()-start)
         return scene
