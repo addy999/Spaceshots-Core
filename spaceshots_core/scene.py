@@ -23,6 +23,19 @@ class Scene:
                  gas_bonus_score=10,  
                  ):
 
+        # # Save args
+        # self.args = dict(
+        #     size=size, 
+        #     spacecraft=planets, 
+        #     planets=planets, 
+        #     sc_start_pos=sc_start_pos, 
+        #     win_region = win_region,
+        #     win_velocity = win_velocity,
+        #     completion_score=completion_score, 
+        #     attempt_score_reduction=attempt_score_reduction, 
+        #     gas_bonus_score=gas_bonus_score,  
+        # )        
+        
         self.size = size
         self.sc = spacecraft
         self.planets = planets
@@ -76,6 +89,10 @@ class Scene:
 
         [planet.move(impulse_time) for planet in self.planets]
         self.sc.update_pos(impulse_time, self.planets, False)
+    
+    def save_state(self):
+        
+        return '+'.join(self.__dict__.values())
     
     def __repr__(self):
         pprint(str(vars(self)),width=100, indent=5,depth=4)

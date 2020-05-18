@@ -85,6 +85,10 @@ class Planet(Asset):
 
         self.x, self.y = self.orbit.next_pos(dt)
         self.poly = Point((self.x, self.y)).buffer(self.radius)
+    
+    def save_state(self):
+        
+        return '+'.join(self.__dict__.values())
              
 class Spacecraft(Asset):
 
@@ -215,6 +219,15 @@ class Spacecraft(Asset):
             self.x, self.y = sc_start_pos
         self.p = Momentum(0.0, 0.0)
         self.gas_level = self._initial_gas_level
+    
+    def save_state(self):
+        
+        dict_ = {i:j for i,j in self.__dict__.items() if i!="poly"}
+        return '+'.join(dict_.values())
+    
+    def load_state(self):
+        
+        
 
     @property
     def theta(self):

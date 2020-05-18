@@ -27,7 +27,12 @@ class Velocity:
 
         return angle
 
-    def __repr__(self):
+    def save_state(self):
+        
+        return '+'.join(self.__dict__.values())
+
+    def __repr__(self):       
+         
         return str((self.x, self.y))
 
 class Force:
@@ -50,6 +55,10 @@ class Force:
             mag = 0.0
         
         return ratio, mag
+    
+    def save_state(self):
+        
+        return '+'.join(self.__dict__.values())
         
     def __add__(self, new):
         
@@ -77,6 +86,10 @@ class Momentum:
         y = force.y * duration
 
         return cls(x, y)
+    
+    def save_state(self):
+        
+        return '+'.join(self.__dict__.values())
 
     def __add__(self, new):
 
@@ -127,6 +140,10 @@ class Orbit:
             self.progress -= self.angular_step * factor
 
         return self.x(self.progress), self.y(self.progress)
+    
+    def save_state(self):
+        
+        return '+'.join(self.__dict__.values())
 
     def reset_pos(self):
         self.progress = 0

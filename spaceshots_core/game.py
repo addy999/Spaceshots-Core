@@ -155,3 +155,12 @@ class Game:
             self.wait(time_elapsed)
         
         return level_won, level_failed, message        
+    
+    def save_state(self):
+        
+        to_return = ""
+        to_return += str(self.fps) + "+"
+        
+        
+        
+        
