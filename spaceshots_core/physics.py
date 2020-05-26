@@ -134,13 +134,17 @@ class Orbit:
         # return self.center_y + self.a * math.sin(i)       
         return self.b * np.sin(progress) + self.center_y
 
+    def get_pos(self):
+        return self.x(self.progress), self.y(self.progress)
+
     def next_pos(self, factor=1.0):
+        
         if self.cw:
             self.progress += self.angular_step * factor
         else:
             self.progress -= self.angular_step * factor
 
-        return self.x(self.progress), self.y(self.progress)
+        return self.get_pos()
     
     def save_state(self):
         
@@ -155,20 +159,28 @@ class Orbit:
 
 class OrbitCollection:
     
-    def __init__(self, orbits, min_distance):
+    def __init__(self, orbits):
         
         self.orbits = orbits
-        self.min_distance = min_distance
     
-    def orbits_valid(self):
+    def orbits_valid(self, min_distance):
         for o in self.orbits:
             for j in self.orbits:
                 if o!=j:                    
                     if o.poly.intersects(j.poly):
                         return False                    
-                    if o.poly.exterior.distance(j.poly.exterior) < self.min_distance:
+                    if o.poly.exterior.distance(j.poly.exterior) < min_distance:
                         return False                
         return True
+
+    def adjust_dir(self, screen_size):
+        
+        for o in self.orbits:
+            pos = o.get_pos()
+            if 0<=pos[0]<=screen_size[0]/2:
+                o.cw = False
+            else:
+                o.cw = True
 
 def unit_vector(vector):
     """ Returns the unit vector of the vector.  """

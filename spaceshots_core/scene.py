@@ -92,6 +92,8 @@ class LevelBuilder:
         
         self.x_size = x_size
         self.y_size = y_size
+        self.diag = (self.x_size**2 + self.y_size**2)**0.5
+        self.padding = self.diag / 10
         
         # Initialization dicts
         
@@ -106,7 +108,7 @@ class LevelBuilder:
                 b = (200, 300), # 234
                 angular_step = (2*np.pi/200, 2*np.pi/200), # speed
                 center_x = (0, self.x_size), 
-                center_y = (0, self.y_size),
+                center_y = (0, self.y_size/2),
                 min_distance = (self.x_size/2, self.y_size/2),
             ),
             sc = dict(
@@ -114,11 +116,10 @@ class LevelBuilder:
                 gas_level = (350, 450),
                 thrust_force = (3000,3000),
                 gas_per_thrust = (0.5/1000, 1/1000),
-                width=(35,35), 
-                length=(35,35),
+                size=(35,35), 
                 start_pos=(
                     (self.x_size / 4, self.x_size * 0.75), 
-                    (0, self.y_size/3)),
+                    (0, self.y_size*0.1)),
             ),
             scene = dict(
                 win_region_length = sorted((self.x_size/2, self.y_size/2)), 
@@ -140,19 +141,18 @@ class LevelBuilder:
                 b = (300, 600),
                 angular_step = (1.5*np.pi/200, 3*np.pi/200), # speed
                 center_x = (0, self.x_size), 
-                center_y = (0, self.y_size),
+                center_y = (0, self.y_size/2),
                 min_distance = (self.x_size/2, self.y_size/2),
             ),
             sc = dict(
                 mass = (100, 125),
                 gas_level = (300, 450),
-                thrust_force = (3000,4500),
-                gas_per_thrust = (1/1000, 1.5/1000),
-                width=(35,35), 
-                length=(35,35),
+                thrust_force = (3500,4500),
+                gas_per_thrust = (0.5/1000, 1/1000),
+                size=(35,35), 
                 start_pos=(
                     (self.x_size / 4, self.x_size * 0.75), 
-                    (0, self.y_size/3)),
+                    (0, self.y_size*0.1)),
             ),
             scene = dict(
                 win_region_length = sorted((self.x_size/3, self.y_size/3)), 
@@ -182,28 +182,33 @@ class LevelBuilder:
         return p1,p2
               
     def create(self, option='medium'):
-      
+        
+        start = time.time()
         init_config = dict_to_class(self.__dict__[option.lower()])
         
         # Orbits         
         orbits = []
         n = randint(*init_config.planet.n)
-        valid_orbits = False
-        while not valid_orbits:
-            orbits = [Orbit(uniform(*init_config.orbit.a), uniform(*init_config.orbit.b), uniform(*init_config.orbit.center_x), uniform(*init_config.orbit.center_y), angular_step=uniform(*init_config.orbit.angular_step), CW=randint(0,1)) for i in range(n)]
-            valid_orbits = OrbitCollection(orbits, uniform(*init_config.orbit.min_distance)).orbits_valid()
+        orbits_valid = False
+        while not orbits_valid:
+            orbits = OrbitCollection([Orbit(uniform(*init_config.orbit.a), uniform(*init_config.orbit.b), uniform(*init_config.orbit.center_x), uniform(*init_config.orbit.center_y), angular_step=uniform(*init_config.orbit.angular_step), CW=randint(0,1)) for i in range(n)])
+            orbits_valid = orbits.orbits_valid(uniform(*init_config.orbit.min_distance))
         
-         # SC
-        sc = Spacecraft('', uniform(*init_config.sc.mass), uniform(*init_config.sc.gas_level),uniform(*init_config.sc.thrust_force), gas_per_thrust=uniform(*init_config.sc.gas_per_thrust), width=uniform(*init_config.sc.width), length=uniform(*init_config.sc.length), x=uniform(*init_config.sc.start_pos[0]), y=uniform(*init_config.sc.start_pos[1]))
+        ## Orbit directions
+        # orbits.adjust_dir((self.x_size, self.y_size))
+        
+        # SC
+        size = uniform(*init_config.sc.size)
+        sc = Spacecraft('', uniform(*init_config.sc.mass), uniform(*init_config.sc.gas_level),uniform(*init_config.sc.thrust_force), gas_per_thrust=uniform(*init_config.sc.gas_per_thrust), width=size, length=size, x=uniform(*init_config.sc.start_pos[0]), y=uniform(*init_config.sc.start_pos[1]))
         # sc.y = sc.length/2
         
         # Planets    
-        planets = [Planet(name='', mass=uniform(*init_config.planet.mass), orbit = orbit, radius_per_kilogram=uniform(*init_config.planet.radius_per_kilogram)) for orbit in orbits]
+        planets = [Planet(name='', mass=uniform(*init_config.planet.mass), orbit = orbit, radius_per_kilogram=uniform(*init_config.planet.radius_per_kilogram)) for orbit in orbits.orbits]
         valid = False
         while not valid:
             valid = True
             for planet in planets:
-                if not 0<=planet.x<=self.x_size or not 0<=planet.y<=self.y_size or sc.calc_distance(planet) <  (self.x_size**2 + self.y_size**2)**0.5 / 3:
+                if not self.padding<=planet.x<=self.x_size-self.padding or not self.padding<=planet.y<=self.y_size-self.padding or sc.calc_distance(planet) <  self.diag / 3:
                     planet.move(10)
                     valid = False
   
@@ -211,4 +216,5 @@ class LevelBuilder:
         win_region = self.generate_win_region(randint(0,2), uniform(*init_config.scene.win_region_length))
         scene = Scene((self.x_size,self.y_size), sc, planets, win_region=win_region, win_velocity=uniform(*init_config.scene.win_velocity), completion_score=randint(*init_config.scene.completion_score),attempt_score_reduction=randint(*init_config.scene.attempt_score_reduction ), gas_bonus_score=randint(*init_config.scene.gas_bonus_score))
 
+        print("Took", time.time() - start)
         return scene
