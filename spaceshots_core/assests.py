@@ -81,7 +81,6 @@ class Planet(Asset):
         self.poly = Point((self.x, self.y)).buffer(self.radius)
     
     def move(self, dt=1.0):
-
         self.x, self.y = self.orbit.next_pos(dt)
         self.make_poly()
     

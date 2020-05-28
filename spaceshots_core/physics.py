@@ -163,24 +163,28 @@ class OrbitCollection:
         
         self.orbits = orbits
     
-    def orbits_valid(self, min_distance):
+    def orbits_valid(self, min_distance, max_distance):
         for o in self.orbits:
             for j in self.orbits:
                 if o!=j:                    
                     if o.poly.intersects(j.poly):
                         return False                    
-                    if o.poly.exterior.distance(j.poly.exterior) < min_distance:
+                    if o.poly.exterior.distance(j.poly.exterior) < min_distance or o.poly.exterior.distance(j.poly.exterior) > max_distance:
                         return False                
         return True
+
+    # def 
 
     def adjust_dir(self, screen_size):
         
         for o in self.orbits:
-            pos = o.get_pos()
-            if 0<=pos[0]<=screen_size[0]/2:
-                o.cw = False
-            else:
+            x,y = o.get_pos()
+            if x<=screen_size[0]/2:
+                # print("left, anti cw")
                 o.cw = True
+            else:
+                # print("right, cw")
+                o.cw = False
 
 def unit_vector(vector):
     """ Returns the unit vector of the vector.  """

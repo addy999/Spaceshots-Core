@@ -88,13 +88,14 @@ class LevelBuilder:
     '''
     Generates spacecraft, planets, and scene based on some config options.
     '''
-    def __init__(self, x_size, y_size):
+    def __init__(self, x_size, y_size, timeout=10):
         
         self.x_size = x_size
         self.y_size = y_size
         self.size = self.x_size * self.y_size
         self.diag = (self.x_size**2 + self.y_size**2)**0.5
         self.padding = min(x_size, y_size)/8
+        self.timeout = timeout
         
         # Initialization dicts
         
@@ -117,7 +118,7 @@ class LevelBuilder:
                 size=(35,50), 
                 start_pos=(
                     (self.x_size / 4, self.x_size * 0.75), 
-                    (0, self.y_size*0.1)),
+                    (0, self.y_size*0.75)),
             ),
             scene = dict(
                 win_region_length = sorted((self.x_size/2, self.y_size/2)), 
@@ -147,7 +148,7 @@ class LevelBuilder:
                 size=(35,50), 
                 start_pos=(
                     (self.x_size / 4, self.x_size * 0.75), 
-                    (0, self.y_size*0.1)),
+                    (0, self.y_size*0.75)),
             ),
             scene = dict(
                 win_region_length = sorted((self.x_size/3, self.y_size/3)), 
@@ -187,29 +188,37 @@ class LevelBuilder:
         orbits = []
         n = randint(*init_config.planet.n)
         orbits_valid = False
-        while not orbits_valid:
+        dur = 0
+        while not orbits_valid and dur<=self.timeout:
+            s = time.time()
             orbits = OrbitCollection([Orbit(uniform(*init_config.orbit.a), uniform(*init_config.orbit.b), uniform(*init_config.orbit.center_x), uniform(*init_config.orbit.center_y), progress=uniform(0, 2*np.pi), angular_step=uniform(*init_config.orbit.angular_step), CW=randint(0,1)) for i in range(n)])
-            orbits_valid = orbits.orbits_valid(uniform(self.x_size/2, self.y_size/2), uniform(self.x_size/2, self.diag/2))
+            orbits_valid = orbits.orbits_valid(uniform(self.x_size/2, self.y_size/2), uniform( self.diag/2, self.diag*0.75))
+            dur += time.time() - s
+        print("Orbits", dur)
         
-        ## Orbit directions
-        # orbits.adjust_dir((self.x_size, self.y_size))
+        # Orbit directions
+        orbits.adjust_dir((self.x_size, self.y_size))
         
         # SC
         # print("Making sc...")
         size = uniform(*init_config.sc.size)
-        sc = Spacecraft('', uniform(*init_config.sc.mass), uniform(*init_config.sc.gas_level),uniform(*init_config.sc.thrust_force), width=size, length=size, x=uniform(*init_config.sc.start_pos[0]), y=uniform(*init_config.sc.start_pos[1]))
-        sc.y = sc.length/2
+        sc = Spacecraft('', uniform(*init_config.sc.mass), uniform(*init_config.sc.gas_level),uniform(*init_config.sc.thrust_force), width=size, length=size, x=uniform(*init_config.sc.start_pos[0]), y=np.clip(uniform(*init_config.sc.start_pos[1]), size/2, None))
         
         # Planets   
         # print("Making planets...")    
         planets = [Planet(name='', mass=uniform(*init_config.planet.mass), orbit = orbit) for orbit in orbits.orbits]
         valid = False
-        while not valid:
+        dur = 0
+        while not valid and dur<=self.timeout:
             valid = True
+            s = time.time()
             for planet in planets:
                 if not self.padding<=planet.x<=self.x_size-self.padding or not self.padding<=planet.y<=self.y_size-self.padding or not sc.calc_distance(planet) > self.diag / 4:
-                    planet.move(20)
+                    planet.move(60)
                     valid = False
+            dur += time.time() - s
+            
+        print("Planets", dur)
   
         # Scene
         # print("Making scene...")
