@@ -28,10 +28,6 @@ class Velocity:
 
         return angle
 
-    def save_state(self):
-        
-        return '+'.join(self.__dict__.values())
-
     def __repr__(self):       
          
         return str((self.x, self.y))
@@ -56,10 +52,6 @@ class Force:
             mag = 0.0
         
         return ratio, mag
-    
-    def save_state(self):
-        
-        return '+'.join(self.__dict__.values())
         
     def __add__(self, new):
         
@@ -146,10 +138,6 @@ class Orbit:
             self.progress -= self.angular_step * factor
 
         return self.get_pos()
-    
-    def save_state(self):
-        
-        return '+'.join(self.__dict__.values())
 
     def reset_pos(self):
         self.progress = 0
@@ -175,18 +163,28 @@ class OrbitCollection:
         return True
 
     def adjust_dir_to_sc(self, sc_pos):
-        
         for o in self.orbits:
             current_dist = euclidian_distance(o.get_pos(), sc_pos)
-            o.next_pos(1)
+            o.next_pos(5)
             next_dist = euclidian_distance(o.get_pos(), sc_pos)
-            print(current_dist, next_dist)
+            # print("sc", sc_pos, "Current", current_dist, "After",  next_dist)
             if next_dist > current_dist:
                 # moved far away
-                print("before", o.cw)
+                # print("changed")
                 o.cw = not o.cw    
-                print("after", o.cw)    
-
+    
+    def adjust_dir_to_screen(self, x_screen, y_screen):
+        center = (x_screen/2, y_screen/2)
+        for o in self.orbits:
+            current_dist = euclidian_distance(o.get_pos(), center)
+            o.next_pos(5)
+            next_dist = euclidian_distance(o.get_pos(), center)
+            # print("center", center, "Current", current_dist, "After",  next_dist, o.cw)
+            if next_dist > current_dist:
+                # moved far away
+                o.cw = not o.cw    
+            # print("now", o.cw)
+                
     def adjust_cw_dir(self, screen_size):
         
         for o in self.orbits:
