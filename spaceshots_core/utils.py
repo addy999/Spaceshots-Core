@@ -28,3 +28,8 @@ def closest_dist_to_sc(sc, planets):
             min_dist=dist
     
     return min_dist
+
+def euclidian_distance(v1, v2):
+    v1, v2 = np.array(v1), np.array(v2)
+    return np.linalg.norm(v1-v2)
+    

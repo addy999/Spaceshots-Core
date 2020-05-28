@@ -194,15 +194,16 @@ class LevelBuilder:
             orbits = OrbitCollection([Orbit(uniform(*init_config.orbit.a), uniform(*init_config.orbit.b), uniform(*init_config.orbit.center_x), uniform(*init_config.orbit.center_y), progress=uniform(0, 2*np.pi), angular_step=uniform(*init_config.orbit.angular_step), CW=randint(0,1)) for i in range(n)])
             orbits_valid = orbits.orbits_valid(uniform(self.x_size/2, self.y_size/2), uniform( self.diag/2, self.diag*0.75))
             dur += time.time() - s
-        print("Orbits", dur)
-        
-        # Orbit directions
-        orbits.adjust_dir((self.x_size, self.y_size))
+        # print("Orbits", dur)
         
         # SC
         # print("Making sc...")
         size = uniform(*init_config.sc.size)
         sc = Spacecraft('', uniform(*init_config.sc.mass), uniform(*init_config.sc.gas_level),uniform(*init_config.sc.thrust_force), width=size, length=size, x=uniform(*init_config.sc.start_pos[0]), y=np.clip(uniform(*init_config.sc.start_pos[1]), size/2, None))
+        
+        # Orbit directions
+        orbits.adjust_dir_to_sc(sc.pos())
+        # orbits.adjust_dir((self.x_size, self.y_size))
         
         # Planets   
         # print("Making planets...")    
@@ -218,12 +219,12 @@ class LevelBuilder:
                     valid = False
             dur += time.time() - s
             
-        print("Planets", dur)
+        # print("Planets", dur)
   
         # Scene
         # print("Making scene...")
         win_region = self.generate_win_region(np.random.choice(range(0, 3), p=init_config.scene.win_region_pos_prob), uniform(*init_config.scene.win_region_length))
         scene = Scene((self.x_size,self.y_size), sc, planets, win_region=win_region, win_velocity=uniform(*init_config.scene.win_velocity), completion_score=randint(*init_config.scene.completion_score),attempt_score_reduction=randint(*init_config.scene.attempt_score_reduction ), gas_bonus_score=randint(*init_config.scene.gas_bonus_score))
 
-        print("Took", time.time() - start)
+        # print("Took", time.time() - start)
         return scene

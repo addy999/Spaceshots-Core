@@ -4,6 +4,7 @@ import os
 import sys
 import shapely.affinity
 
+from .utils import euclidian_distance
 from shapely.geometry.point import Point
 
 G = 6.67408e-11  # m^3/kg*s^2
@@ -173,17 +174,26 @@ class OrbitCollection:
                         return False                
         return True
 
-    # def 
+    def adjust_dir_to_sc(self, sc_pos):
+        
+        for o in self.orbits:
+            current_dist = euclidian_distance(o.get_pos(), sc_pos)
+            o.next_pos(1)
+            next_dist = euclidian_distance(o.get_pos(), sc_pos)
+            print(current_dist, next_dist)
+            if next_dist > current_dist:
+                # moved far away
+                print("before", o.cw)
+                o.cw = not o.cw    
+                print("after", o.cw)    
 
-    def adjust_dir(self, screen_size):
+    def adjust_cw_dir(self, screen_size):
         
         for o in self.orbits:
             x,y = o.get_pos()
             if x<=screen_size[0]/2:
-                # print("left, anti cw")
                 o.cw = True
             else:
-                # print("right, cw")
                 o.cw = False
 
 def unit_vector(vector):
