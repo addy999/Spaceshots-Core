@@ -179,8 +179,8 @@ class LevelBuilder:
         return p1,p2
     
     def move_planets(self, planets, sc):
-        step = 10
-        iterations = 200
+        step = 2 * 1000/70
+        iterations = 500
         for planet in planets:
             # Iterate planet positions 
             pos = [
@@ -192,14 +192,13 @@ class LevelBuilder:
                 
                 for i in range(iterations)
             ]
-            filtered_pos = [p for p in pos if self.padding<=p["pos"][0]<=self.x_size-self.padding and self.padding<=p["pos"][1]<=self.y_size-self.padding] # filter positions where planet is inside the screen - padding area 
+            # filter positions where planet is inside the screen - padding area 
+            filtered_pos = [p for p in pos if self.padding<=p["pos"][0]<=self.x_size-self.padding and self.padding<=p["pos"][1]<=self.y_size-self.padding] 
             # Sort for largest distance away from sc 
             sorted_pos = sorted(filtered_pos, key = lambda i: i['sc_dist']) 
             # Set planet to furthest position
             planet.orbit.progress = sorted_pos[-1]["progress"]
             planet.x, planet.y = sorted_pos[-1]["pos"]
-            
-            # print("avail x", [self.padding, self.x_size-self.padding], "avail y", [self.padding, self.y_size-self.padding], "set", planet.pos())
               
     def create(self, option):
         
