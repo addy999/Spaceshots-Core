@@ -8,6 +8,7 @@ from random import randint
 from .assests import *
 from .physics import *
 from .utils import *
+from shapely.geometry import LineString
 
 class Scene:
 
@@ -73,7 +74,7 @@ class Scene:
     def update_all_pos(self, impulse_time):
 
         [planet.move(impulse_time) for planet in self.planets]
-        self.sc.update_pos(impulse_time, self.planets, True)
+        self.sc.update_pos(impulse_time, self.planets, False)
     
     def save_state(self):
         
@@ -88,7 +89,7 @@ class LevelBuilder:
     '''
     Generates spacecraft, planets, and scene based on some config options.
     '''
-    def __init__(self, x_size, y_size, timeout=10):
+    def __init__(self, x_size, y_size, timeout=2):
         
         self.x_size = x_size
         self.y_size = y_size
@@ -96,6 +97,7 @@ class LevelBuilder:
         self.diag = (self.x_size**2 + self.y_size**2)**0.5
         self.padding = min(x_size, y_size)/8
         self.timeout = timeout
+        self.poly = Polygon([(0,0), (x_size,0), (x_size, y_size), (0, y_size)])
         
         # Initialization dicts
         
@@ -179,26 +181,21 @@ class LevelBuilder:
         return p1,p2
     
     def move_planets(self, planets, sc):
-        step = 2 * 1000/70
-        iterations = 500
+        
+        rect = LineString(list(self.poly.exterior.coords))
+        
         for planet in planets:
-            # Iterate planet positions 
-            pos = [
-                {   
-                    "pos" : planet.move(step),
-                    "sc_dist" : sc.calc_distance(planet),
-                    "progress" : planet.orbit.progress
-                }
-                
-                for i in range(iterations)
-            ]
-            # filter positions where planet is inside the screen - padding area 
-            filtered_pos = [p for p in pos if self.padding<=p["pos"][0]<=self.x_size-self.padding and self.padding<=p["pos"][1]<=self.y_size-self.padding] 
-            # Sort for largest distance away from sc 
-            sorted_pos = sorted(filtered_pos, key = lambda i: i['sc_dist']) 
+            
+            circle = LineString(list(planet.orbit.poly.exterior.coords))
+            intersection = circle.intersection(rect)
+            points = [(p.x, p.y) for p in intersection] # where orbit intersects screen edge            
+            
+            positions = {p : euclidian_distance(p, sc.pos()) for p in points}
+            sorted_positions = [k for k,v in sorted(positions.items(), key=lambda item: item[1])] # Sort for largest distance away from sc 
+            
             # Set planet to furthest position
-            planet.orbit.progress = sorted_pos[-1]["progress"]
-            planet.x, planet.y = sorted_pos[-1]["pos"]
+            planet.orbit.set_progress(sorted_positions[-1])
+            planet.move(0)
               
     def create(self, option):
         
@@ -222,10 +219,10 @@ class LevelBuilder:
                 
         # Planets   
         planets = [Planet(name='', mass=uniform(*init_config.planet.mass), orbit = orbit) for orbit in orbits.orbits]
+        s = time.time()
         self.move_planets(planets, sc)
-            
-        # Orbit directions
         orbits.adjust_dir_to_screen(self.x_size, self.y_size)
+        # print("Planets took", time.time()-s)
   
         # Scene
         win_region = self.generate_win_region(np.random.choice(range(0, 3), p=init_config.scene.win_region_pos_prob), uniform(*init_config.scene.win_region_length))
