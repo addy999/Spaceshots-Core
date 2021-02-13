@@ -78,7 +78,7 @@ class Scene:
         return "+".join(self.__dict__.values())
 
     def __repr__(self):
-        pprint(str(vars(self)), width=100, indent=5, depth=4)
+        print(str(vars(self)), width=100, indent=5, depth=4)
         return ""
 
 
