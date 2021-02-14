@@ -1,4 +1,5 @@
-from spaceshots import *
+from .game import Game
+from .scene import LevelBuilder
 from random import randint
 
 game = None
