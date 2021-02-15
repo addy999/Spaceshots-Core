@@ -332,7 +332,7 @@ def rotate(theta, vec, custom=False):
     """
 
     rot_matrix = get_rot_matrix(theta)  # 2 x 2
-    return matmul(rot_matrix, [[i] for i in vec])
+    return matmul(rot_matrix, vec)
 
 
 def angle_between(v1, v2):

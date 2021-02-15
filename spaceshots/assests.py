@@ -150,10 +150,10 @@ class Spacecraft(Asset):
             self.gas_level -= round(self.thrust_mag * self.gas_per_thrust)
 
             # body_vec = self.vel.vec
-            body_vec = rotate(self.theta, [1, 0])
+            body_vec = rotate(self.theta, [[1], [0]])
             if vector_norm(self.vel.vec) == 0.0:
                 # body_vec = [0, -1]
-                body_vec = [1, 0]
+                body_vec = [[1], [0]]
 
             if self.thrust_direction == "-y":
                 vector = rotate(math.pi * 1.5, body_vec)
@@ -164,7 +164,8 @@ class Spacecraft(Asset):
             elif self.thrust_direction == "+x":
                 vector = rotate(0.0, body_vec)
 
-            force = Force(vector[0], vector[1], self.thrust_mag)
+            force = Force(vector[0][0], vector[1][0], self.thrust_mag)
+
             return Momentum.from_impulse(force, time)
 
         return Momentum(0.0, 0.0)
