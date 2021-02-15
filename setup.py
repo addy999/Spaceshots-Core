@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name="spaceshots",
-    version="0.1.2",
+    version="0.1.3",
     description="https://github.com/addy999/deflectiun-Core",
     url="",
     author="Addy Bhatia",

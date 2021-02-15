@@ -50,7 +50,7 @@ class Manager:
             }
         }
 
-        data.update({"n_planets": len(scene.planets)})
+        data.update({"planets": []})
         for i, p in enumerate(scene.planets):
             p_data = {
                 "pos": [round(i, 2) for i in (p.x, p.y)],
@@ -67,7 +67,7 @@ class Manager:
                     # "progress" : round(p.orbit.progress,2)
                 },
             }
-            data.update({f"planet-{i+1}": p_data})
+            data["planets"].append(p_data)
 
         data.update(
             {
